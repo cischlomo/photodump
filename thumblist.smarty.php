@@ -89,10 +89,6 @@ function showFiles($smarty) {
 	 $error="temp file got deleted before I could access it";
 	 return array ('error'=>$error);
  } 
- $filesize=filesize($tmp_file);
- if ($filesize==0 || $filesize===FALSE) {
-	return array ('error'=>"zero length file");
- }
  
  if(md5_check($tmp_file)) {
    copy ($smarty->getConfigVars('photodir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
@@ -397,6 +393,10 @@ function deletephoto($filename){
 }
 function banphoto($filename){
 	global $smarty;
+	$md5_f=md5_file($smarty->getConfigVars('photodir') . '/' . $filename);
+	$handle=fopen("md5s","a+");
+	fputs($handle,$md5_f . "\n");
+	fclose($handle);
 	copy ($smarty->getConfigVars('photodir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
 }

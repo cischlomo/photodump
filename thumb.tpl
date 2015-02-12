@@ -23,17 +23,20 @@
   
  {* -----------------------------------------show single------------------------------------------------ *}
  {elseif isset($smarty.get.show)}
-  <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{$smarty.get.show}">
-  {if isset($smarty.get.delete) }
-   {if $smarty.get.delete == "0" }
-    {deletephoto("{$smarty.get.show}") }
-    <BR>PHOTO DELETED
-   {elseif $smarty.get.delete == "1"}
-    {banphoto("{$smarty.get.show}")}
-    <BR>PHOTO BANNED
+  {if file_exists("{#photodir#}/{$smarty.get.show}")}
+   <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{$smarty.get.show}">
+   {if isset($smarty.get.delete) }
+    {if $smarty.get.delete == "0" }
+     {deletephoto("{$smarty.get.show}") }
+     <BR>PHOTO DELETED
+    {elseif $smarty.get.delete == "1"}
+     {banphoto("{$smarty.get.show}")}
+     <BR>PHOTO BANNED
+    {/if}
    {/if}
-  {/if}
-  
+  {else}
+   <img src="{#siteurl#}/{#site_hombe#}/{#graphicsdir#}/notfound.gif">
+  {/if} 
   
  {* -----------------------------------------upload------------------------------------------------ *}
  {elseif isset($smarty.get.upload)}

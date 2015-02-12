@@ -91,7 +91,7 @@ function showFiles($smarty) {
  } 
  
  if(md5_check($tmp_file)) {
-   copy ($smarty->getConfigVars('photodir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
+   copy ($smarty->getConfigVars('graphicsdir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
    return array ('filename'=>$filename,'error'=>null); //silently fail
  }
  
@@ -388,7 +388,7 @@ function make_thumb($filename,$w,$h,$type,$smarty) {
 
 function deletephoto($filename){
 	global $smarty;
-	copy ($smarty->getConfigVars('photodir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
+	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
 }
 function banphoto($filename){
@@ -397,7 +397,7 @@ function banphoto($filename){
 	$handle=fopen("md5s","a+");
 	fputs($handle,$md5_f . "\n");
 	fclose($handle);
-	copy ($smarty->getConfigVars('photodir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
+	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
 }
 

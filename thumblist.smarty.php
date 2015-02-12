@@ -1,8 +1,9 @@
 <?php
 
 require 'smarty/Smarty.class.php';
-
+ini_set('display_errors','true');
 $smarty = new Smarty;
+$smarty->error_reporting = E_ALL & ~E_NOTICE;
 
 $smarty->debugging = true;
 $smarty->caching = false;
@@ -66,7 +67,7 @@ function nav_arrows($params, $smarty) {
 }
 
 function showFiles($smarty) {
- if (!isset($_FILES) || count($_FILES)<1 || $_FILES['upload']['error']!=UPLOAD_ERR_OK) {
+ if (!isset($_FILES) || count($_FILES)<1 || $_FILES['userfile1']['error']!=UPLOAD_ERR_OK) {
 	 $error="something went wrong";
 	 return array ('error'=>$error);
  }
@@ -306,6 +307,7 @@ while (!feof($in_stream) && $found_oldexif==FALSE ){
 
 
 function iphone_orient($filename) {
+ ini_set("memory_limit", -1);
  $tmp_file=tempnam(sys_get_temp_dir(),"def");
  $in_stream=fopen($filename,"rb");
  $str=fread($in_stream,2);

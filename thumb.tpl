@@ -1,15 +1,20 @@
-{include file="header.tpl"}
-<center>
- {section name=links loop=$links}
-  <a href="{$links[links].url}">{$links[links].title}</a> | 
- {/section}
- <br>
- {include file="search.tpl"}
-  or email pics as an attachment to pics@campidiot.com<br>
+{if !isset($smarty.get.mobile)}
+ {include file="header.tpl"}
+ <center>
+  {section name=links loop=$links}
+   <a href="{$links[links].url}">{$links[links].title}</a> | 
+  {/section}
+  <br>
+  {include file="search.tpl"}
+   or email pics as an attachment to pics@campidiot.com<br>
+{/if}
   
-  
+ {* ----------------------------------------mobile------------------------------------------------- *}
+ {if isset($smarty.get.mobile)}
+  {include file="mobile.tpl"}
+
  {* ----------------------------------------random------------------------------------------------- *}
- {if isset($smarty.get.random)}
+ {elseif isset($smarty.get.random)}
   <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{show_random}">
   
   

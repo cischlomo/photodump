@@ -1,17 +1,17 @@
 <?php
 
 require 'smarty/Smarty.class.php';
-ini_set('display_errors','true');
+ini_set('display_errors','on');
 $smarty = new Smarty;
 $smarty->error_reporting = E_ALL & ~E_NOTICE;
 
-$smarty->debugging = true;
+$smarty->debugging = false;
 $smarty->caching = false;
 //$smarty->cache_lifetime = 120;
 $smarty->assign('links',
  array (
   array ('title'=>'Upload','url'=>$_SERVER['PHP_SELF'] . '?upload'),
-  array ('title'=>'Mobile Upload','url'=>'upload_mobile.html'),
+  array ('title'=>'Mobile Upload','url'=>$_SERVER['PHP_SELF'] . '?mobile'),
   array ('title'=>'View All','url'=> $_SERVER['PHP_SELF'] . '?start=0'),
   array ('title'=>'Random','url'=> $_SERVER['PHP_SELF'] . '?random')
   )
@@ -71,7 +71,14 @@ function showFiles($smarty) {
 	 $error="something went wrong";
 	 return array ('error'=>$error);
  }
- $filename=$_FILES['userfile1']['name'];
+ if (isset($_POST['newname'])) {
+  $filename=$_POST['newname'];
+  if (!preg_match("/\.[a-zA-Z]{3}$/",$filename)) {
+   $filename.=".jpg";
+  }
+ } else {
+  $filename=$_FILES['userfile1']['name'];
+ }
  list(,$type)=explode('/',$_FILES['userfile1']['type']);
  $tmp_file=tempnam(sys_get_temp_dir(),"abc");
  copy ($_FILES['userfile1']['tmp_name'],$tmp_file);

@@ -84,7 +84,7 @@ function showFiles($smarty) {
  copy ($_FILES['userfile1']['tmp_name'],$tmp_file);
  
  $photos=queryPhotos ("select * from files where name='$filename'");
- if (false && count($photos)>0) {
+ if (count($photos)>0) {
 	 $error="photo exists";
 	 return array ('error'=>$error);
  }

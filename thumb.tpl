@@ -81,4 +81,6 @@
   {nav_arrows}
  {/if}
 </center>
-{include file="footer.tpl"}
+{if !isset($smarty.get.mobile)}
+ {include file="footer.tpl"}
+{/if}

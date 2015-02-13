@@ -55,12 +55,12 @@ function nav_arrows($params, $smarty) {
 	$pagination=$smarty->getConfigVars('pagination');
 	if ($start >0) { //show left
 	 $start_left=($start-$pagination < 0  ? 0 : $start-$pagination);
-	 $html.='<a href="thumblist.smarty.php?start='.($start_left).'"><img src="'.
+	 $html.='<a href="thumblist.php?start='.($start_left).'"><img src="'.
 	 $smarty->getConfigVars('siteurl').'/'.$smarty->getConfigVars('site_hombe') . '/' . $smarty->getConfigVars('graphicsdir').'/left.gif"></a>';
 	}
 	if ($start + $pagination < $total_num_photos) { //show right
 	 $start_right=( ($start + $pagination*2 > $total_num_photos - 1) ? $total_num_photos-$pagination : $start + $pagination  );
-	 $html.='<a href="thumblist.smarty.php?start='.($start_right).'"><img src="'.
+	 $html.='<a href="thumblist.php?start='.($start_right).'"><img src="'.
 	 $smarty->getConfigVars('siteurl').'/'.$smarty->getConfigVars('site_hombe') . '/' .$smarty->getConfigVars('graphicsdir').'/right.gif"></a>';
 	}
 	return $html;

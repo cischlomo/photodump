@@ -29,7 +29,7 @@
  {* -----------------------------------------show single------------------------------------------------ *}
  {elseif isset($smarty.get.show)}
   {if file_exists("{#photodir#}/{$smarty.get.show}")}
-   <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{$smarty.get.show}">
+   <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{$smarty.get.show}" onclick="prompt('Image Tag','[image]{$smarty.get.show}[/image]');">
    {if isset($smarty.get.delete) }
     {if $smarty.get.delete == "0" }
      {deletephoto("{$smarty.get.show}") }

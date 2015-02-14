@@ -1,6 +1,6 @@
 <?php
 require 'smarty/Smarty.class.php';
-ini_set('display_errors','on');
+ini_set('display_errors','off');
 $smarty = new Smarty;
 $smarty->error_reporting = E_ALL & ~E_NOTICE;
 
@@ -92,16 +92,25 @@ function showFiles($smarty) {
   }
   if ( (stripos($url,"http://")===FALSE && stripos($url,"https://")===FALSE)
    || (stripos($url,"http://")!=0 || stripos($url,"https://")!=0) ){
-   return array('error'=>'file must start with http:// or https://');
+   return array('error'=>'url must start with http:// or https://');
   }
   $filename.='.' . $_POST['extension'];
   ini_set("error_reporting",~E_WARNING);
-  if (($data=file_get_contents($url))===FALSE) {
+  error_log("snagit! $url");
+  $ch=curl_init($url);
+  $fp=fopen($tmp_file,"w");
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_FILE, $fp);
+  curl_exec($ch);
+  if (curl_errno($ch) || ($httperror=curl_getinfo($ch,CURLINFO_HTTP_CODE))==404)
+   {
+	error_log(curl_error($ch));
+	error_log($httperror);
 	  return array('error'=>'could not snag image');
-  }
-  file_put_contents($tmp_file,$data);
-  $finfo=finfo_open(FILEINFO_MIME);
-  $mime=finfo_file($finfo, $tmp_file);
+   }
+  $mime= curl_getinfo($ch,CURLINFO_CONTENT_TYPE);
+  curl_close($ch);
+  fclose($fp);
   $m="";
   preg_match("/\/([^;]+)/",$mime,$m);
   $type=$m[1];

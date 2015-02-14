@@ -13,6 +13,20 @@
  {if isset($smarty.get.mobile)}
   {include file="mobile.tpl"}
 
+ {* ----------------------------------------snagit------------------------------------------------- *}
+ {elseif isset($smarty.get.snagit)}
+ <p> Snag image from... </p>
+    <form action="{$smarty.server.SCRIPT_NAME}" method="POST">
+  URL: <input name="snagiturl" type="text" value="http://" /><P>
+  ...and call it <input name="newname" type="text" /> &bull;
+  <select name="extension">
+  <option>gif
+  <option>jpg
+  <option>png
+  </select>
+  <input value="upload" type="submit" />
+  </form>
+
  {* ----------------------------------------random------------------------------------------------- *}
  {elseif isset($smarty.get.random)}
   <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{show_random}">

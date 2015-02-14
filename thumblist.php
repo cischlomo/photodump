@@ -1,5 +1,4 @@
 <?php
-
 require 'smarty/Smarty.class.php';
 ini_set('display_errors','on');
 $smarty = new Smarty;
@@ -13,11 +12,12 @@ $smarty->assign('links',
   array ('title'=>'Upload','url'=>$_SERVER['PHP_SELF'] . '?upload'),
   array ('title'=>'Mobile Upload','url'=>$_SERVER['PHP_SELF'] . '?mobile'),
   array ('title'=>'View All','url'=> $_SERVER['PHP_SELF'] . '?start=0'),
+  array ('title'=>'Snagit','url'=> $_SERVER['PHP_SELF'] . '?snagit'),
   array ('title'=>'Random','url'=> $_SERVER['PHP_SELF'] . '?random')
   )
  );
  $smarty->configLoad('thumb.conf');
- if (isset($_FILES) && count($_FILES)>0) {
+ if (isset($_POST['snagiturl']) || (isset($_FILES) && count($_FILES)>0) ) {
   $smarty->assign('uploadfiles',true);
   $smarty->assign('uploaded_file',showFiles($smarty));
  } else {
@@ -67,21 +67,45 @@ function nav_arrows($params, $smarty) {
 }
 
 function showFiles($smarty) {
- if (!isset($_FILES) || count($_FILES)<1 || $_FILES['userfile1']['error']!=UPLOAD_ERR_OK) {
-	 $error="something went wrong";
-	 return array ('error'=>$error);
- }
- if (isset($_POST['newname'])) {
-  $filename=$_POST['newname'];
+ //uploaded or snagged? either way determine type and save to tmp file
+ $tmp_file=tempnam(sys_get_temp_dir(),"abc");
+ if (isset($_FILES) && count($_FILES)>0){##############files
+  if ($_FILES['userfile1']['error']!=UPLOAD_ERR_OK) {
+   $error="something went wrong";
+   return array ('error'=>$error);
+  }
+  if (isset($_POST['newname'])) {
+   $filename=$_POST['newname'];
+  } else {
+   $filename=$_FILES['userfile1']['name'];
+  }
   if (!preg_match("/\.[a-zA-Z]{3}$/",$filename)) {
    $filename.=".jpg";
   }
- } else {
-  $filename=$_FILES['userfile1']['name'];
+  list(,$type)=explode('/',$_FILES['userfile1']['type']);
+  copy ($_FILES['userfile1']['tmp_name'],$tmp_file);
+ } elseif (isset ($_POST['snagiturl'])) { ##############snagit
+  $url=$_POST['snagiturl'];
+  $filename=$_POST['newname'];
+  if (!$filename || !$url ){
+   return array('error'=>'form not filled out');
+  }
+  if ( (stripos($url,"http://")===FALSE && stripos($url,"https://")===FALSE)
+   || (stripos($url,"http://")!=0 || stripos($url,"https://")!=0) ){
+   return array('error'=>'file must start with http:// or https://');
+  }
+  $filename.='.' . $_POST['extension'];
+  ini_set("error_reporting",~E_WARNING);
+  if (($data=file_get_contents($url))===FALSE) {
+	  return array('error'=>'could not snag image');
+  }
+  file_put_contents($tmp_file,$data);
+  $finfo=finfo_open(FILEINFO_MIME);
+  $mime=finfo_file($finfo, $tmp_file);
+  $m="";
+  preg_match("/\/([^;]+)/",$mime,$m);
+  $type=$m[1];
  }
- list(,$type)=explode('/',$_FILES['userfile1']['type']);
- $tmp_file=tempnam(sys_get_temp_dir(),"abc");
- copy ($_FILES['userfile1']['tmp_name'],$tmp_file);
  
  $photos=queryPhotos ("select * from files where name='$filename'");
  if (count($photos)>0) {
@@ -141,10 +165,8 @@ function showFiles($smarty) {
  
  $db=new PDO('sqlite:photo3.db');
  $sql="insert into files (name,date) values ('$filename',strftime('%s', 'now'))";
- //error_log($sql);
  $db->exec($sql);
  $db=null;
- //error_log("mime type: " . print_r( $imagesize,1));
  return array ('filename'=>$filename,'error'=>null);
 }
 
@@ -404,7 +426,7 @@ function banphoto($filename){
 	$handle=fopen("md5s","a+");
 	fputs($handle,$md5_f . "\n");
 	fclose($handle);
-	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
+	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
 }
 

@@ -98,22 +98,31 @@ function showFiles($smarty) {
   ini_set("error_reporting",~E_WARNING);
   error_log("snagit! $url");
   $ch=curl_init($url);
+  curl_setopt($ch, CURLOPT_NOBODY, 1);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+  curl_exec($ch);
+  $mime= curl_getinfo($ch,CURLINFO_CONTENT_TYPE);
+  curl_close($ch);
+  $m="";
+  preg_match("/\/([^;]+)/",$mime,$m);
+  $type=$m[1];
+  if (!preg_match("(jpeg|png|gif)",$type)) {
+    return array('error'=>'not a valid image');
+  }
+
   $fp=fopen($tmp_file,"w");
+  $ch=curl_init($url);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_FILE, $fp);
   curl_exec($ch);
+  curl_close($ch);
+  fclose($fp);
   if (curl_errno($ch) || ($httperror=curl_getinfo($ch,CURLINFO_HTTP_CODE))==404)
    {
 	error_log(curl_error($ch));
 	error_log($httperror);
 	  return array('error'=>'could not snag image');
    }
-  $mime= curl_getinfo($ch,CURLINFO_CONTENT_TYPE);
-  curl_close($ch);
-  fclose($fp);
-  $m="";
-  preg_match("/\/([^;]+)/",$mime,$m);
-  $type=$m[1];
  }
  
  $photos=queryPhotos ("select * from files where name='$filename'");

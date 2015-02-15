@@ -101,23 +101,13 @@ function showFiles($smarty) {
   $fp=fopen($tmp_file,"w");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($ch, CURLOPT_FILE, $fp);
-  curl_setopt($ch, CURLOPT_BUFFERSIZE, 1000000); // more progress info
-  curl_setopt($ch, CURLOPT_NOPROGRESS, false);
-  curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function(
-   $DownloadSize, $Downloaded, $UploadSize, $Uploaded){
-    // If $Downloaded exceeds 1KB, returning non-0 breaks the connection!
-    return ($Downloaded > (5000000)) ? 1 : 0;
-  });
-
   curl_exec($ch);
-  if (curl_errno($ch))
+  if (curl_errno($ch) || ($httperror=curl_getinfo($ch,CURLINFO_HTTP_CODE))==404)
    {
-	  error_log(curl_strerror($ch));
-	  return array('error'=>'oops, maybe you tried to download a file that was too large');
-   } elseif (curl_getinfo($ch,CURLINFO_HTTP_CODE)==404) {
-	  return array('error'=>'file not found');   
+	error_log(curl_error($ch));
+	error_log($httperror);
+	  return array('error'=>'could not snag image');
    }
-
   $mime= curl_getinfo($ch,CURLINFO_CONTENT_TYPE);
   curl_close($ch);
   fclose($fp);

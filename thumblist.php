@@ -31,7 +31,6 @@ $smarty->assign('links',
  }
 
 $smarty->registerPlugin("function","nav_arrows","nav_arrows");
-$smarty->registerPlugin("function","show_random","show_random");
 $smarty->display('thumb.tpl');
 
 function getStart($start,$smarty) {
@@ -44,7 +43,8 @@ function getStart($start,$smarty) {
  }
  return $start;
 }
-function show_random ($params,$smarty) {
+function show_random () {
+	global $smarty;
 	$rand = mt_rand(1,$smarty->getTemplateVars('total_num_photos'));
 	$photos = queryPhotos("select * from files where rowid=$rand");
 	return $photos[0]['name'];
@@ -86,10 +86,13 @@ function showFiles($smarty) {
   list(,$type)=explode('/',$_FILES['userfile1']['type']);
   copy ($_FILES['userfile1']['tmp_name'],$tmp_file);
  } elseif (isset ($_POST['snagiturl'])) { ##############snagit
+  $url=$_POST['snagiturl'];
+  if (preg_match("/anon.?ib/",$url)){
+   exit('<img src="http://fluidwire.com/ico/pedohunter.gif">');
+  }
   if (floodcheck()) {
 	return array("error"=>"too many snagits in the past hour");
   }
-  $url=$_POST['snagiturl'];
   $filename=$_POST['newname'];
   if (!$filename || !$url ){
    return array('error'=>'form not filled out');

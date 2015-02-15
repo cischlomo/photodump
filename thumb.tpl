@@ -29,7 +29,8 @@
 
  {* ----------------------------------------random------------------------------------------------- *}
  {elseif isset($smarty.get.random)}
-  <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{show_random}">
+  {$random=show_random()}
+  <img src="{#siteurl#}/{#site_hombe#}/{#photodir#}/{$random}" onclick="prompt('Image Tag','[image]{$random}[/image]');">
   
   
  {* -----------------------------------------search------------------------------------------------ *}

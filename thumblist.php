@@ -1,5 +1,6 @@
 <?php
 require 'smarty/Smarty.class.php';
+
 ini_set('display_errors','off');
 $smarty = new Smarty;
 $smarty->error_reporting = E_ALL & ~E_NOTICE;
@@ -85,6 +86,9 @@ function showFiles($smarty) {
   list(,$type)=explode('/',$_FILES['userfile1']['type']);
   copy ($_FILES['userfile1']['tmp_name'],$tmp_file);
  } elseif (isset ($_POST['snagiturl'])) { ##############snagit
+  if (floodcheck()) {
+	return array("error"=>"too many snagits in the past hour");
+  }
   $url=$_POST['snagiturl'];
   $filename=$_POST['newname'];
   if (!$filename || !$url ){
@@ -460,5 +464,34 @@ function md5_check($filename){
  }
  return FALSE;
 }
-
+function floodcheck() {
+ $flood=100;
+ $recent=3600;
+ $ip='127.0.0.1';
+ $md5_ip=md5($ip);
+ $db=new PDO('sqlite:photo3.db');
+ $sql="create table if not exists flood (date int, ip varchar(255) unique,times int)";
+ $db->exec($sql);
+ $db=null;
+ list($res)=(queryPhotos ("select times,date from flood where ip='$md5_ip'"));
+ $times=$res['times'];
+ $date = $res['date'];
+ error_log("times: $times date: $date");
+ $newtimes=0;
+ if (time()-$date > $recent) {
+  error_log ("too long ago");
+ } else {
+  $newtimes=intval($times + 1);
+  error_log ("recent");
+ }
+ $db=new PDO('sqlite:photo3.db');
+ $sql="replace into flood values (strftime('%s', 'now'), '$md5_ip', $newtimes)";
+ $db->exec($sql);
+ $db=null;
+ if ($newtimes>$flood) {
+  error_log ("flooding by $ip");
+  return TRUE;
+ }
+ return FALSE;
+}
 ?>

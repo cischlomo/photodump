@@ -9,10 +9,10 @@ $smarty->caching = false;
 //$smarty->cache_lifetime = 120;
 $smarty->assign('links',
  array (
+  array ('title'=>'Snagit','url'=> $_SERVER['PHP_SELF'] . '?snagit'),
   array ('title'=>'Upload','url'=>$_SERVER['PHP_SELF'] . '?upload'),
   array ('title'=>'Mobile Upload','url'=>$_SERVER['PHP_SELF'] . '?mobile'),
   array ('title'=>'View All','url'=> $_SERVER['PHP_SELF'] . '?start=0'),
-  array ('title'=>'Snagit','url'=> $_SERVER['PHP_SELF'] . '?snagit'),
   array ('title'=>'Random','url'=> $_SERVER['PHP_SELF'] . '?random')
   )
  );
@@ -169,8 +169,10 @@ function showFiles($smarty) {
  copy ($tmp_file,$smarty->getConfigVars('photodir') . '/' . $filename);
  
  //4
- make_thumb($tmp_file,$w,$h,$type, $smarty);
- copy ($tmp_file,$smarty->getConfigVars('thumbdir') . "/thb_$filename");
+ if ($type!='gif') {
+  make_thumb($tmp_file,$w,$h,$type, $smarty);
+  copy ($tmp_file,$smarty->getConfigVars('thumbdir') . "/thb_$filename");
+ }
  
  $db=new PDO('sqlite:photo3.db');
  $sql="insert into files (name,date) values ('$filename',strftime('%s', 'now'))";

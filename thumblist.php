@@ -446,6 +446,7 @@ function deletephoto($filename){
 	global $smarty;
 	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
+	error_log("photo $filename deleted by " . $_SERVER['REMOTE_ADDR']);
 }
 function banphoto($filename){
 	global $smarty;
@@ -455,6 +456,7 @@ function banphoto($filename){
 	fclose($handle);
 	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
+	error_log("photo $filename banned by " . $_SERVER['REMOTE_ADDR']);
 }
 
 function md5_check($filename){

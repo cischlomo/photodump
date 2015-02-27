@@ -146,16 +146,12 @@ function showFiles($smarty) {
 	 return array ('error'=>$error);
  } 
  
- if(md5_check($tmp_file)) {
-   copy ($smarty->getConfigVars('graphicsdir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
-   return array ('filename'=>$filename,'error'=>null); //silently fail
- }
- 
  $imagesize=getimagesize($tmp_file);
  if ($imagesize == FALSE) {
 	 return array('error'=>"not a valid image");
  }
 
+ 
  $w=$imagesize[0];
  $h=$imagesize[1];
 
@@ -175,6 +171,11 @@ function showFiles($smarty) {
   reduce_filesize($tmp_file,$w,$h,$type,$resize_above);
  }
  
+ if(md5_check($tmp_file)) {
+   copy ($smarty->getConfigVars('graphicsdir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
+   return array ('filename'=>$filename,'error'=>null); //silently fail
+ }
+
  //3
  if ($type=='jpeg') {
   //Bartlettify
@@ -456,13 +457,12 @@ function banphoto($filename){
 	fclose($handle);
 	copy ($smarty->getConfigVars('graphicsdir') . '/rageguy.jpg', $smarty->getConfigVars('photodir') . '/' . $filename);
 	@unlink($smarty->getConfigVars('thumbdir') . '/thb_' . $filename);
-	error_log("photo $filename banned by " . $_SERVER['REMOTE_ADDR']);
+	error_log("photo $filename with md5 $md5_f banned by " . $_SERVER['REMOTE_ADDR']);
 }
 
 function md5_check($filename){
  $md5s=file('md5s',FILE_IGNORE_NEW_LINES);
  $md5_f=md5_file($filename);
- error_log ("md5_f: $md5_f");
  if (in_array($md5_f,$md5s)) {
   error_log("gotcha $filename");
   return TRUE;

@@ -15,20 +15,21 @@ $smarty->assign('links',
   array ('title'=>'Mobile Upload','url'=>$_SERVER['PHP_SELF'] . '?mobile'),
   array ('title'=>'View All','url'=> $_SERVER['PHP_SELF'] . '?start=0'),
   array ('title'=>'Random','url'=> $_SERVER['PHP_SELF'] . '?random')
-  )
- );
- $smarty->configLoad('thumb.conf');
- if (isset($_POST['snagiturl']) || (isset($_FILES) && count($_FILES)>0) ) {
-  $smarty->assign('uploadfiles',true);
-  $smarty->assign('uploaded_file',showFiles($smarty));
- } else {
-  $db=new PDO('sqlite:photo3.db');
-  $sth=$db->query("select count(*) from files");
-  list ($num)=$sth->fetch();
-  $sth->closeCursor();
-  $db=null;
-  $smarty->assign('total_num_photos', $num);	 
- }
+ )
+);
+$smarty->configLoad('thumb.conf');
+$db=new PDO('sqlite:photo3.db');
+$db->exec("create table if not exists files (name text, date int, md5 char(32))");
+if (isset($_POST['snagiturl']) || (isset($_FILES) && count($_FILES)>0) ) {
+ $smarty->assign('uploadfiles',true);
+ $smarty->assign('uploaded_file',showFiles($smarty));
+} else {
+ $sth=$db->query("select count(*) from files");
+ list ($num)=$sth->fetch();
+ $sth->closeCursor();
+ $db=null;
+ $smarty->assign('total_num_photos', $num);	 
+}
 
 $smarty->registerPlugin("function","nav_arrows","nav_arrows");
 $smarty->display('thumb.tpl');
@@ -43,28 +44,30 @@ function getStart($start,$smarty) {
  }
  return $start;
 }
+
 function show_random () {
 	global $smarty;
 	$rand = mt_rand(1,$smarty->getTemplateVars('total_num_photos'));
 	$photos = queryPhotos("select * from files where rowid=$rand");
 	return $photos[0]['name'];
 }
+
 function nav_arrows($params, $smarty) {
-	$html="";
-	$total_num_photos=$smarty->getTemplateVars('total_num_photos');
-	$start=$smarty->getTemplateVars('start');
-	$pagination=$smarty->getConfigVars('pagination');
-	if ($start >0) { //show left
-	 $start_left=($start-$pagination < 0  ? 0 : $start-$pagination);
-	 $html.='<a href="thumblist.php?start='.($start_left).'"><img src="'.
-	 $smarty->getConfigVars('siteurl').'/'.$smarty->getConfigVars('site_hombe') . '/' . $smarty->getConfigVars('graphicsdir').'/left.gif"></a>';
-	}
-	if ($start + $pagination < $total_num_photos) { //show right
-	 $start_right=( ($start + $pagination*2 > $total_num_photos - 1) ? $total_num_photos-$pagination : $start + $pagination  );
-	 $html.='<a href="thumblist.php?start='.($start_right).'"><img src="'.
-	 $smarty->getConfigVars('siteurl').'/'.$smarty->getConfigVars('site_hombe') . '/' .$smarty->getConfigVars('graphicsdir').'/right.gif"></a>';
-	}
-	return $html;
+ $html="";
+ $total_num_photos=$smarty->getTemplateVars('total_num_photos');
+ $start=$smarty->getTemplateVars('start');
+ $pagination=$smarty->getConfigVars('pagination');
+ if ($start >0) { //show left
+  $start_left=($start-$pagination < 0  ? 0 : $start-$pagination);
+  $html.='<a href="thumblist.php?start='.($start_left).'"><img src="'.
+  $smarty->getConfigVars('siteurl').'/'.$smarty->getConfigVars('site_hombe') . '/' . $smarty->getConfigVars('graphicsdir').'/left.gif"></a>';
+ }
+ if ($start + $pagination < $total_num_photos) { //show right
+  $start_right=( ($start + $pagination*2 > $total_num_photos - 1) ? $total_num_photos-$pagination : $start + $pagination  );
+  $html.='<a href="thumblist.php?start='.($start_right).'"><img src="'.
+  $smarty->getConfigVars('siteurl').'/'.$smarty->getConfigVars('site_hombe') . '/' .$smarty->getConfigVars('graphicsdir').'/right.gif"></a>';
+ }
+ return $html;
 }
 
 function showFiles($smarty) {
@@ -124,34 +127,41 @@ function showFiles($smarty) {
   curl_exec($ch);
   curl_close($ch);
   fclose($fp);
-  if (curl_errno($ch) || ($httperror=curl_getinfo($ch,CURLINFO_HTTP_CODE))==404)
-   {
-	error_log(curl_error($ch));
-	error_log($httperror);
-	  return array('error'=>'could not snag image');
-   }
- }
+  if (curl_errno($ch) || ($httperror=curl_getinfo($ch,CURLINFO_HTTP_CODE))==404) {
+   error_log(curl_error($ch));
+   error_log($httperror);
+   return array('error'=>'could not snag image');
+  }
+ } /******* END SNAGIT ********/
  
  $photos=queryPhotos ("select * from files where name='$filename'");
  if (count($photos)>0) {
-	 $error="photo exists";
-	 return array ('error'=>$error);
+  $error="photo exists";
+  return array ('error'=>$error);
  }
  if (!check_file_name($filename,$smarty)) {
-	 $error="file does not conform to naming standards";
-	 return array ('error'=>$error);
+  $error="file does not conform to naming standards";
+  return array ('error'=>$error);
  }
  if (!file_exists($tmp_file)) {
-	 $error="temp file got deleted before I could access it";
-	 return array ('error'=>$error);
- } 
+  $error="temp file got deleted before I could access it";
+  return array ('error'=>$error);
+ }
  
  $imagesize=getimagesize($tmp_file);
  if ($imagesize == FALSE) {
 	 return array('error'=>"not a valid image");
  }
 
- 
+ $md5_f=getmd5($tmp_file,$filename);
+ $md5s=file('md5s',FILE_IGNORE_NEW_LINES);
+ if (in_array($md5_f,$md5s)) {
+  error_log("gotcha $md5_f");
+  copy ($smarty->getConfigVars('graphicsdir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
+  return array ('filename'=>$filename,'error'=>null); //silently fail
+ }
+
+
  $w=$imagesize[0];
  $h=$imagesize[1];
 
@@ -171,18 +181,12 @@ function showFiles($smarty) {
   reduce_filesize($tmp_file,$w,$h,$type,$resize_above);
  }
  
- if(md5_check($tmp_file)) {
-   copy ($smarty->getConfigVars('graphicsdir') . '/rickroll.gif', $smarty->getConfigVars('photodir') . '/' . $filename);
-   return array ('filename'=>$filename,'error'=>null); //silently fail
- }
-
  //3
  if ($type=='jpeg') {
   //Bartlettify
   move_to_bartlett($tmp_file);
  }
- 
- 
+
  copy ($tmp_file,$smarty->getConfigVars('photodir') . '/' . $filename);
  
  //4
@@ -192,7 +196,7 @@ function showFiles($smarty) {
  }
  
  $db=new PDO('sqlite:photo3.db');
- $sql="insert into files (name,date) values ('$filename',strftime('%s', 'now'))";
+ $sql="insert into files (name,date,md5) values ('$filename',strftime('%s', 'now'), '$md5_f')";
  $db->exec($sql);
  $db=null;
  return array ('filename'=>$filename,'error'=>null);
@@ -451,7 +455,7 @@ function deletephoto($filename){
 }
 function banphoto($filename){
 	global $smarty;
-	$md5_f=md5_file($smarty->getConfigVars('photodir') . '/' . $filename);
+	$md5_f=getmd5($smarty->getConfigVars('photodir') . '/' . $filename,$filename);
 	$handle=fopen("md5s","a+");
 	fputs($handle,$md5_f . "\n");
 	fclose($handle);
@@ -460,15 +464,18 @@ function banphoto($filename){
 	error_log("photo $filename with md5 $md5_f banned by " . $_SERVER['REMOTE_ADDR']);
 }
 
-function md5_check($filename){
- $md5s=file('md5s',FILE_IGNORE_NEW_LINES);
- $md5_f=md5_file($filename);
- if (in_array($md5_f,$md5s)) {
-  error_log("gotcha $filename");
-  return TRUE;
+function getmd5($file_location,$filename) {
+ $db=new PDO('sqlite:photo3.db');
+ $sth=$db->query("select md5 from files where name='$filename' limit 1");
+ list ($md5_f)=$sth->fetch();
+ $sth->closeCursor();
+ $db=null;
+ if (!$md5_f) {
+  $md5_f=md5_file($file_location);
  }
- return FALSE;
+ return $md5_f;
 }
+
 function floodcheck() {
  $flood=100;
  $recent=3600;

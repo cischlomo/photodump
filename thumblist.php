@@ -173,10 +173,12 @@ function showFiles($smarty) {
  if ($type=='jpeg') {
   iphone_orient($tmp_file);//have to do this first before exif gets clobbered
  }
+ clearstatcache();
  $filesize=filesize($tmp_file);
  
  //2
  $resize_above=$smarty->getConfigVars('resize_above');
+ error_log("checking if file too large. filesize: $filesize resize_above: $resize_above");
  if ($type!='gif' && $filesize>$resize_above) {
   reduce_filesize($tmp_file,$w,$h,$type,$resize_above);
  }
